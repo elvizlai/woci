@@ -1,0 +1,147 @@
+{
+  "Concurrent": 2,
+  "REPO": "git@github.com:wothing/17mei.git",
+  "ProjectPath": "/gopath/src/github.com/wothing/17mei",
+  "SQLDir": "sql",
+  "EtcdImage": "quay.io/coreos/etcd",
+  "NsqImage": "nsqio/nsq",
+  "PGImage": "postgres",
+  "RedisImage": "redis",
+  "Services": [
+    {
+      "Name": "user",
+      "Path": "user",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-user"
+    },
+    {
+      "Name": "mediastore",
+      "Path": "mediastore",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-mediastore"
+    },
+    {
+      "Name": "story",
+      "Path": "story",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-story"
+    },
+    {
+      "Name": "verification",
+      "Path": "verification",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-verification"
+    },
+    {
+      "Name": "push",
+      "Path": "push",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-push"
+    },
+    {
+      "Name": "other",
+      "Path": "other",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-other"
+    },
+    {
+      "Name": "activity",
+      "Path": "activity",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-activity"
+    },
+    {
+      "Name": "version",
+      "Path": "version",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-version"
+    },
+    {
+      "Name": "statistic",
+      "Path": "statistic",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-statistic"
+    },
+    {
+      "Name": "share",
+      "Path": "share",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-share"
+    },
+    {
+      "Name": "wechat",
+      "Path": "wechat",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-wechat"
+    },
+    {
+      "Name": "authority",
+      "Path": "authority",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-authority"
+    },
+    {
+      "Name": "config",
+      "Path": "config",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-config"
+    },
+    {
+      "Name": "message",
+      "Path": "message",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-message"
+    },
+    {
+      "Name": "sms",
+      "Path": "sms",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-sms"
+    },
+    {
+      "Name": "hospital",
+      "Path": "hospital",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-hospital"
+    },
+    {
+      "Name": "order",
+      "Path": "order",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-order"
+    },
+    {
+      "Name": "confidant",
+      "Path": "confidant",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-confidant"
+    },
+    {
+      "Name": "goods",
+      "Path": "goods",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-goods"
+    },
+    {
+      "Name": "account",
+      "Path": "account",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-account"
+    },
+    {
+      "Name": "banner",
+      "Path": "banner",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-banner"
+    },
+    {
+      "Name": "easemob",
+      "Path": "easemob",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-easemob"
+    },
+    {
+      "Name": "payment",
+      "Path": "payment",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-payment"
+    },
+    {
+      "Name": "coupon",
+      "Path": "coupon",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-coupon"
+    },
+    {
+      "Name": "appway",
+      "Path": "gateway/appway",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379"
+    },
+    {
+      "Name": "interway",
+      "Path": "gateway/interway",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379"
+    },
+    {
+      "Name": "hospway",
+      "Path": "gateway/hospway",
+      "Para": "-etcd http://[TRACER]-etcd.test:2379"
+    }
+  ]
+}
