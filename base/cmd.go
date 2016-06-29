@@ -20,7 +20,8 @@ import (
 var FMT = fmt.Sprintf
 
 func CMD(order string) (string, error) {
-	log.Tdebugf(conf.Tracer, "CMD: %s", order)
+	log.Tdebugf(conf.Tracer, "CMD --> %s", order)
+
 	cmd := exec.Command("bash")
 
 	var stdout bytes.Buffer
@@ -35,7 +36,10 @@ func CMD(order string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Tdebugf(conf.Tracer, "%s --> %s, STDERR --> %s\n", order, err.Error(), stderr.String())
+		log.Tdebugf(conf.Tracer, "%s --> %s\n, STDERR --> %s\n, STDOUT -- > %s\n", order, err.Error(), stderr.String(), stdout.String())
+		if stderr.String() == "" {
+			return stdout.String(), err
+		}
 		return stderr.String(), err
 	}
 	return stdout.String(), nil
