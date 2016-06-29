@@ -64,3 +64,13 @@ GLOBAL OPTIONS:
    --help, -h              show help
    --version, -v           print the version
 ```
+
+###黑魔法总是写在最后
+
+```
+woci build -o appway  //只编译,不运行.一般用于编译检查
+woci rebuild appway,interway  //重新编译并运行多个模块
+woci rebuild all  //重新编译并运行所有模块
+woci test wechat,version  //单独测试一个或多个模块
+woci logs all  //输出所有模块的日志
+```
