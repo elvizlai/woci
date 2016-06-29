@@ -147,23 +147,26 @@ func main() {
 			Usage:   "Rebuild app with specified name",
 			Action: func(c *cli.Context) error {
 				conf.RestoreUUID()
-				args := c.Args().First()
-				switch args {
-				case "":
+				n := c.NArg()
+
+				if n == 0 {
 					return cli.NewExitError("please specify app name", 88)
-				case "all":
-				default:
+				}
+
+				if c.Args().First() != "all" {
 					temp := []conf.Service{}
-					buildList := strings.Split(args, ",")
-					for _, x := range buildList {
-						for _, y := range conf.Services {
-							if x == y.Name {
-								temp = append(temp, y)
+					for i := 0; i < n; i++ {
+						for _, x := range strings.Split(c.Args().Get(i), ",") {
+							for _, y := range conf.Services {
+								if x == y.Name {
+									temp = append(temp, y)
+								}
 							}
 						}
 					}
 					conf.Services = temp
 				}
+
 				ci.AppClean()
 				ci.AppBuild()
 				ci.AppStart()
@@ -176,7 +179,9 @@ func main() {
 			Usage:   "Run all test case if no app name specified",
 			Action: func(c *cli.Context) error {
 				conf.RestoreUUID()
-				ci.AppTest(strings.Split(c.Args().First(), ",")...)
+				args := []string{c.Args().First()}
+				args = append(args, c.Args().Tail()...)
+				ci.AppTest(strings.Split(strings.Join(args, ","), ",")...)
 				return nil
 			},
 		},
