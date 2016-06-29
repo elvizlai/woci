@@ -144,13 +144,13 @@ func main() {
 		cli.Command{
 			Name:    "rebuild",
 			Aliases: []string{"r", "re"},
-			Usage:   "Rebuild app. split by ',' if multiple",
+			Usage:   "Rebuild app with specified name",
 			Action: func(c *cli.Context) error {
 				conf.RestoreUUID()
 				args := c.Args().First()
 				switch args {
 				case "":
-					return cli.NewExitError("please provide app name", 88)
+					return cli.NewExitError("please specify app name", 88)
 				case "all":
 				default:
 					temp := []conf.Service{}
@@ -173,10 +173,10 @@ func main() {
 		cli.Command{
 			Name:    "test",
 			Aliases: []string{"t"},
-			Usage:   "Run test case",
+			Usage:   "Run all test case if no app name specified",
 			Action: func(c *cli.Context) error {
 				conf.RestoreUUID()
-				ci.AppTest()
+				ci.AppTest(strings.Split(c.Args().First(), ",")...)
 				return nil
 			},
 		},
@@ -194,7 +194,7 @@ func main() {
 		cli.Command{
 			Name:    "logs",
 			Aliases: []string{"l"},
-			Usage:   "Log by app name",
+			Usage:   "Fetch the logs of specified app",
 			Action: func(c *cli.Context) error {
 				if c.NArg() == 0 {
 					return cli.NewExitError("please provide app name", 88)
