@@ -11,28 +11,20 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/urfave/cli"
 	"github.com/wothing/log"
 
-	"github.com/wothing/woci/base"
 	"github.com/wothing/woci/ci"
 	"github.com/wothing/woci/conf"
+	"github.com/wothing/woci/plugin"
 )
-
-var wg = &sync.WaitGroup{}
-
-var gofunc = func(foo func()) {
-	defer wg.Done()
-	foo()
-}
 
 var debug = false
 var configFile = "/woci.json"
 
 func init() {
+	log.SetOutput(os.Stdout)
 	log.SetFlags(log.LstdFlags | log.Llevel)
 }
 
@@ -41,7 +33,7 @@ func main() {
 	app.Name = "woci"
 	app.HelpName = app.Name
 	app.Usage = "make coding joyful!"
-	app.Version = "0.1"
+	app.Version = "0.2"
 	app.Author = "elvizlai"
 	app.EnableBashCompletion = true
 
@@ -76,43 +68,24 @@ func main() {
 			Usage:   "Evil Mode.👿",
 			Action: func(c *cli.Context) error {
 				conf.GenUUID()
-				ci.Etcd()
-				wg.Add(3)
-				go gofunc(ci.Pgsql)
-				go gofunc(ci.Redis)
-				go gofunc(ci.Nsq)
-				wg.Wait()
-
-				ci.AppBuild()
-
-				start := time.Now()
-				ci.AppStart()
-				<-time.After(time.Now().Add(time.Second * 5).Sub(start))
-
-				ci.AppTest()
-
+				lifecycle()
 				return nil
 			},
 		},
 		cli.Command{
 			Name:      "init",
 			ShortName: "i",
-			Usage:     "Init etcd, postgres, redis, nsq",
+			Usage:     "Initial stage",
 			Action: func(c *cli.Context) error {
 				conf.GenUUID()
-				ci.Etcd()
-				wg.Add(3)
-				go gofunc(ci.Pgsql)
-				go gofunc(ci.Redis)
-				go gofunc(ci.Nsq)
-				wg.Wait()
+				ci.Initial()
 				return nil
 			},
 		},
 		cli.Command{
 			Name:    "build",
 			Aliases: []string{"b"},
-			Usage:   "Build all app and start",
+			Usage:   "Build stage",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "only, o",
@@ -122,29 +95,28 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 				if arg := c.String("only"); arg != "" {
-					temp := []conf.Service{}
-					buildList := strings.Split(arg, ",")
-					for _, x := range buildList {
-						for _, y := range conf.Services {
-							if x == y.Name {
-								temp = append(temp, y)
+					temp := []conf.Module{}
+					for _, m := range strings.Split(arg, ",") {
+						for _, v := range conf.Config.Modules {
+							if m == v.Name {
+								temp = append(temp, v)
 							}
 						}
 					}
-					conf.Services = temp
-					ci.AppBuild()
+					conf.Config.Modules = temp
+					ci.Build()
 					return nil
 				}
 				conf.RestoreUUID()
-				ci.AppBuild()
-				ci.AppStart()
+				ci.Build()
+				ci.Start()
 				return nil
 			},
 		},
 		cli.Command{
 			Name:    "rebuild",
 			Aliases: []string{"r", "re"},
-			Usage:   "Rebuild app with specified name",
+			Usage:   "Rebuild stage",
 			Action: func(c *cli.Context) error {
 				conf.RestoreUUID()
 				n := c.NArg()
@@ -154,22 +126,23 @@ func main() {
 				}
 
 				if c.Args().First() != "all" {
-					temp := []conf.Service{}
+					temp := []conf.Module{}
 					for i := 0; i < n; i++ {
-						for _, x := range strings.Split(c.Args().Get(i), ",") {
-							for _, y := range conf.Services {
-								if x == y.Name {
-									temp = append(temp, y)
+						for _, m := range strings.Split(c.Args().Get(i), ",") {
+							for _, v := range conf.Config.Modules {
+
+								if m == v.Name {
+									temp = append(temp, v)
 								}
 							}
 						}
 					}
-					conf.Services = temp
+					conf.Config.Modules = temp
 				}
 
-				ci.AppClean()
-				ci.AppBuild()
-				ci.AppStart()
+				ci.Clean()
+				ci.Build()
+				ci.Start()
 				return nil
 			},
 		},
@@ -181,7 +154,7 @@ func main() {
 				conf.RestoreUUID()
 				args := []string{c.Args().First()}
 				args = append(args, c.Args().Tail()...)
-				ci.AppTest(strings.Split(strings.Join(args, ","), ",")...)
+				ci.Test(strings.Split(strings.Join(args, ","), ",")...)
 				return nil
 			},
 		},
@@ -191,9 +164,25 @@ func main() {
 			Usage:   "Clean all app and data",
 			Action: func(c *cli.Context) error {
 				conf.RestoreUUID()
-				ci.AppClean()
-				ci.DataClean()
+				ci.After()
 				return nil
+			},
+		},
+		cli.Command{
+			Name:  "plugin",
+			Usage: "Plugin center",
+			Subcommands: []cli.Command{
+				cli.Command{
+					Name:  "postgres",
+					Usage: "Postgres data importer",
+					Action: func(c *cli.Context) error {
+						if c.NArg() != 2 {
+							return cli.NewExitError("need 2 paras", 88)
+						}
+						plugin.Postgres(c.Args().Get(0), c.Args().Get(1))
+						return nil
+					},
+				},
 			},
 		},
 		cli.Command{
@@ -206,27 +195,27 @@ func main() {
 				}
 				conf.RestoreUUID()
 
-				args := c.Args().First()
-				if args == "all" {
-					for _, v := range conf.Services {
-						data, err := base.CMD("docker logs " + conf.Tracer + "-" + v.Name)
-						if err != nil {
-							log.Terrorf(conf.Tracer, data)
-							log.Tfatal(conf.Tracer, err)
-						}
-						fmt.Fprintf(app.Writer, data)
-					}
-				} else {
-					appList := strings.Split(args, ",")
-					for _, v := range appList {
-						data, err := base.CMD("docker logs " + conf.Tracer + "-" + v)
-						if err != nil {
-							log.Terrorf(conf.Tracer, data)
-							log.Tfatal(conf.Tracer, err)
-						}
-						fmt.Fprintf(app.Writer, data)
-					}
-				}
+				//args := c.Args().First()
+				//if args == "all" {
+				//	for _, v := range conf.Services {
+				//		data, err := base.CMD("docker logs " + conf.Tracer + "-" + v.Name)
+				//		if err != nil {
+				//			log.Terrorf(conf.Tracer, data)
+				//			log.Tfatal(conf.Tracer, err)
+				//		}
+				//		fmt.Fprintf(app.Writer, data)
+				//	}
+				//} else {
+				//	appList := strings.Split(args, ",")
+				//	for _, v := range appList {
+				//		data, err := base.CMD("docker logs " + conf.Tracer + "-" + v)
+				//		if err != nil {
+				//			log.Terrorf(conf.Tracer, data)
+				//			log.Tfatal(conf.Tracer, err)
+				//		}
+				//		fmt.Fprintf(app.Writer, data)
+				//	}
+				//}
 				return nil
 			},
 		},
@@ -237,4 +226,11 @@ func main() {
 	}
 
 	app.Run(os.Args)
+}
+
+func lifecycle() {
+	ci.Initial()
+	ci.Build()
+	ci.Start()
+	ci.Test()
 }

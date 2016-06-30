@@ -11,81 +11,68 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"fmt"
+	"runtime"
+	"strings"
 
 	"github.com/pborman/uuid"
 	"github.com/wothing/log"
 )
 
-var (
-	Tracer      string
-	Concurrent  int
-	REPO        string
-	ProjectPath string // This is a absolute PATH
-	SQLDir      string
-	PGImage     string
-	RedisImage  string
-	EtcdImage   string
-	NsqImage    string
-	Services    []Service
-)
-
-type Service struct {
-	Name string
-	Path string
-	Para string
+type config struct {
+	TRACER     string
+	Concurrent int
+	Env        map[string]interface{}
+	Initial    []string
+	Before     []string
+	Modules    []Module
+	Test       []string
+	After      []string
 }
+
+type Module struct {
+	Name  string
+	Build string
+	Start string
+	Clean string
+}
+
+var Config = &config{Concurrent: runtime.NumCPU(), TRACER: uuid.New()[:8]}
 
 func ParseConfig(configFile string) {
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Tfatalf(Tracer, "read %s error: %v", configFile, err)
+		log.Fatal("read '%s' error: %v", configFile, err)
 	}
+	log.Debugf("load '%s' succeed", configFile)
 
-	cm := make(map[string]interface{})
-	err = json.Unmarshal(data, &cm)
+	err = json.Unmarshal(data, Config)
 	if err != nil {
-		log.Tfatalf(Tracer, "unmarshal %s error: %v", configFile, err)
+		log.Fatalf("unmarshal '%s' error: %v", configFile, err)
 	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			log.Tfatalf(Tracer, "%s panic--> %v", configFile, r)
+	dataStr := string(data)
+	for i, j := 0, len(Config.Env); i < j; i++ {
+		for k, v := range Config.Env {
+			dataStr = strings.Replace(dataStr, "$"+k, fmt.Sprint(v), -1)
 		}
-	}()
-
-	Concurrent = int(cm["Concurrent"].(float64))
-	REPO = cm["REPO"].(string)
-	ProjectPath = cm["ProjectPath"].(string) // This is a absolute PATH
-	SQLDir = cm["SQLDir"].(string)
-
-	PGImage = cm["PGImage"].(string)
-	RedisImage = cm["RedisImage"].(string)
-	EtcdImage = cm["EtcdImage"].(string)
-	NsqImage = cm["NsqImage"].(string)
-
-	services := cm["Services"].([]interface{})
-	for _, v := range services {
-		s := Service{
-			Name: v.(map[string]interface{})["Name"].(string),
-			Path: v.(map[string]interface{})["Path"].(string),
-			Para: v.(map[string]interface{})["Para"].(string),
-		}
-		Services = append(Services, s)
 	}
+
+	json.Unmarshal([]byte(dataStr), Config)
 }
 
 func GenUUID() {
-	Tracer = uuid.New()[:8]
-	err := ioutil.WriteFile("/tracer", []byte(Tracer), os.ModeTemporary)
+	Config.TRACER = uuid.New()[:8]
+	err := ioutil.WriteFile("/TRACER", []byte(Config.TRACER), os.ModeTemporary)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func RestoreUUID() {
-	data, err := ioutil.ReadFile("/tracer")
+	data, err := ioutil.ReadFile("/TRACER")
 	if err != nil {
 		log.Fatal("can not do this, read file '/tracer' failed")
 	}
-	Tracer = string(data)
+	Config.TRACER = string(data)
 }

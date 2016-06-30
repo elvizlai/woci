@@ -8,31 +8,21 @@
 package ci
 
 import (
-	"github.com/wothing/log"
+	"strings"
 
+	"github.com/wothing/log"
 	. "github.com/wothing/woci/base"
 	"github.com/wothing/woci/conf"
 )
 
-// all blew do not care error
+// do not care error
+func Clean() {
+	log.Tinfof(conf.Config.TRACER, "CLEAN STAGE, COUNT:%d", len(conf.Config.Modules))
 
-func DataClean() {
-	log.Tinfo(conf.Tracer, "data clean")
-	CMD(FMT("docker stop %s-etcd", conf.Tracer))
-	CMD(FMT("docker stop %s-redis", conf.Tracer))
-	CMD(FMT("docker stop %s-pgsql", conf.Tracer))
-	CMD(FMT("docker stop %s-nsqd", conf.Tracer))
-
-	CMD(FMT("docker rm %s-etcd", conf.Tracer))
-	CMD(FMT("docker rm %s-redis", conf.Tracer))
-	CMD(FMT("docker rm %s-pgsql", conf.Tracer))
-	CMD(FMT("docker rm %s-nsqd", conf.Tracer))
-}
-
-func AppClean() {
-	log.Tinfof(conf.Tracer, "app clean, count:%d", len(conf.Services))
-	for _, s := range conf.Services {
-		CMD(FMT("docker stop %s-%s", conf.Tracer, s.Name))
-		CMD(FMT("docker rm %s-%s", conf.Tracer, s.Name))
+	for _, m := range conf.Config.Modules {
+		data, err := TCMD("CLEAN", strings.Replace(m.Clean, "[NAME]", m.Name, -1))
+		if err != nil {
+			log.Twarn(conf.Config.TRACER, data)
+		}
 	}
 }

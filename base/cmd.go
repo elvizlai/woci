@@ -11,16 +11,17 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/wothing/log"
-
 	"github.com/wothing/woci/conf"
 )
 
 var FMT = fmt.Sprintf
 
-func CMD(order string) (string, error) {
-	log.Tdebugf(conf.Tracer, "CMD --> %s", order)
+func TCMD(stage, order string) (string, error) {
+	order = strings.Replace(order, "[TRACER]", conf.Config.TRACER, -1)
+	log.Tinfof(conf.Config.TRACER, "%s: %s", stage, order)
 
 	cmd := exec.Command("bash")
 
@@ -36,7 +37,6 @@ func CMD(order string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Tdebugf(conf.Tracer, "%s --> %s\n, STDERR --> %s\n, STDOUT -- > %s\n", order, err.Error(), stderr.String(), stdout.String())
 		if stderr.String() == "" {
 			return stdout.String(), err
 		}
