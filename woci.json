@@ -23,7 +23,8 @@
     "docker run -d --net=test --name [TRACER]-nsqd nsqio/nsq /nsqd",
     "docker run -d --net=test --name [TRACER]-redis redis",
     "docker run -d --net=test --name [TRACER]-pgsql -e POSTGRES_DB=meidb -e POSTGRES_PASSWORD=wothing postgres",
-    "/woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable $WORKDIR/sql"
+    "/woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable CMD \"CREATE EXTENSION IF NOT EXISTS \"pgcrypto\";\"",
+    "/woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable FILE $WORKDIR/sql"
   ],
   "Before": [
     "make -C $WORKDIR idl ve"

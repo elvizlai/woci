@@ -9,9 +9,9 @@ package conf
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
-	"fmt"
 	"runtime"
 	"strings"
 
@@ -63,16 +63,16 @@ func ParseConfig(configFile string) {
 
 func GenUUID() {
 	Config.TRACER = uuid.New()[:8]
-	err := ioutil.WriteFile("/TRACER", []byte(Config.TRACER), os.ModeTemporary)
+	err := ioutil.WriteFile("/.TRACER", []byte(Config.TRACER), os.ModeTemporary)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func RestoreUUID() {
-	data, err := ioutil.ReadFile("/TRACER")
+	data, err := ioutil.ReadFile("/.TRACER")
 	if err != nil {
-		log.Fatal("can not do this, read file '/tracer' failed")
+		log.Fatal("can not do this, read file '/.TRACER' failed")
 	}
 	Config.TRACER = string(data)
 }

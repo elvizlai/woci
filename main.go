@@ -176,10 +176,7 @@ func main() {
 					Name:  "postgres",
 					Usage: "Postgres data importer",
 					Action: func(c *cli.Context) error {
-						if c.NArg() != 2 {
-							return cli.NewExitError("need 2 paras", 88)
-						}
-						plugin.Postgres(c.Args().Get(0), c.Args().Get(1))
+						plugin.Postgres(c.Args().First(), c.Args().Tail()...)
 						return nil
 					},
 				},

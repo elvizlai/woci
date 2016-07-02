@@ -12,13 +12,23 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/wothing/woci/filewalk"
 )
 
-func Postgres(dsn string, dir string) {
+func Postgres(dsn string, para ...string) {
+	l := len(para)
+	if l == 2 {
+		exec(dsn, para[0], para[1])
+	} else {
+		os.Stderr.WriteString("plugin 'postgres' accpet only 3 params, check")
+	}
+}
+
+func exec(dsn string, cmd string, para string) {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("error on connecting to '%s': %v", dsn, err))
@@ -38,25 +48,31 @@ func Postgres(dsn string, dir string) {
 		}
 	}
 
-	_, err = db.Exec(`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`)
-	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("extension pgcrypto error: %v", err))
-		return
-	}
-
-	files := filewalk.WalkDir(dir, "sql").FileList()
-	os.Stdout.WriteString(fmt.Sprintf("sql list: %v\n", files))
-
-	for _, f := range files {
-		sql, err := ioutil.ReadFile(f)
+	switch strings.ToLower(cmd) {
+	case "cmd":
+		_, err = db.Exec(para)
 		if err != nil {
-			os.Stderr.WriteString(fmt.Sprintf("read '%s' error: %v", f, err))
-			return
+			os.Stderr.WriteString(fmt.Sprintf("%s '%s' error: %v", cmd, para, err))
+		} else {
+			os.Stdout.WriteString(fmt.Sprintf("'%s' done", para))
 		}
-		_, err = db.Exec(string(sql))
-		if err != nil {
-			os.Stderr.WriteString(fmt.Sprintf("exec '%s' error: %v", f, err))
-			return
+	case "file":
+		files := filewalk.WalkDir(para, "sql").FileList()
+		os.Stdout.WriteString(fmt.Sprintf("sql list: %v\n", files))
+
+		for _, f := range files {
+			sql, err := ioutil.ReadFile(f)
+			if err != nil {
+				os.Stderr.WriteString(fmt.Sprintf("read '%s' error: %v", f, err))
+				return
+			}
+			_, err = db.Exec(string(sql))
+			if err != nil {
+				os.Stderr.WriteString(fmt.Sprintf("exec '%s' error: %v", f, err))
+				return
+			}
 		}
+	default:
+		os.Stderr.WriteString(fmt.Sprintf("'%s' not acceptable, only accept CMD and FILE now!", cmd))
 	}
 }
