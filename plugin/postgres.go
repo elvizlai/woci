@@ -24,7 +24,7 @@ func Postgres(dsn string, para ...string) {
 	if l == 2 {
 		exec(dsn, para[0], para[1])
 	} else {
-		os.Stderr.WriteString("plugin 'postgres' accpet only 3 params, check")
+		os.Stderr.WriteString("plugin 'postgres' need three params, check")
 	}
 }
 
