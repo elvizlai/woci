@@ -16,7 +16,7 @@ import (
 )
 
 func Start() {
-	log.Tinfof(conf.Config.TRACER, "START STAGE, COUNT:%d", len(conf.Config.Modules))
+	log.Tinfof(conf.Config.TRACER, "[START] COUNT:%d", len(conf.Config.Modules))
 
 	for _, m := range conf.Config.Modules {
 		data, err := cmd.TCMD("START", strings.Replace(m.Start, "[NAME]", m.Name, -1))
