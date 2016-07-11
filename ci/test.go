@@ -8,30 +8,31 @@
 package ci
 
 import (
-	"github.com/wothing/log"
+	"strings"
 
-	"fmt"
-	. "github.com/wothing/woci/base"
 	"github.com/wothing/woci/conf"
+	"github.com/wothing/woci/util/cmd"
+	"github.com/wothing/woci/util/log"
 )
 
-func AppTest(names ...string) {
+func Test(names ...string) {
 	if len(names) == 0 {
-		data, err := CMD(FMT("CGO_ENABLED=0 TestEnv=CI CiTracer=%s go test -v %s/gateway/tests/*.go", conf.Tracer, conf.ProjectPath))
-		if err != nil {
-			log.Terror(conf.Tracer, data)
-			log.Tfatal(conf.Tracer, err)
+		for _, v := range conf.Config.Test {
+			data, err := cmd.TCMD("TEEST", strings.Replace(v, "[PLACEHOLDER]", "", -1))
+			if err != nil {
+				log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
+			}
+			log.Tinfof(conf.Config.TRACER, data)
 		}
-		log.Tinfo(conf.Tracer, data)
 	} else {
 		for _, name := range names {
-			data, err := CMD(FMT("CGO_ENABLED=0 TestEnv=CI CiTracer=%s go test -v %s/gateway/tests/%s*.go", conf.Tracer, conf.ProjectPath, name))
-			if err != nil {
-				log.Terror(conf.Tracer, data)
-				log.Tfatal(conf.Tracer, err)
+			for _, v := range conf.Config.Test {
+				data, err := cmd.TCMD("TEEST", strings.Replace(v, "[PLACEHOLDER]", name, -1))
+				if err != nil {
+					log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
+				}
+				log.Tinfof(conf.Config.TRACER, data)
 			}
-			fmt.Println(data)
 		}
 	}
-
 }

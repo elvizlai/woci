@@ -2,7 +2,7 @@
  * Copyright 2015-2016, Wothing Co., Ltd.
  * All rights reserved.
  *
- * Created by Elvizlai on 2016/05/07 07:27
+ * Created by Elvizlai on 2016/06/29 22:53
  */
 
 package ci
@@ -15,12 +15,11 @@ import (
 	"github.com/wothing/woci/util/log"
 )
 
-// do not care error
-func Clean() {
-	log.Tinfof(conf.Config.TRACER, "CLEAN STAGE, COUNT:%d", len(conf.Config.Modules))
+func Start() {
+	log.Tinfof(conf.Config.TRACER, "[START] COUNT:%d", len(conf.Config.Modules))
 
 	for _, m := range conf.Config.Modules {
-		data, err := cmd.TCMD("CLEAN", strings.Replace(m.Clean, "[NAME]", m.Name, -1))
+		data, err := cmd.TCMD("START", strings.Replace(m.Start, "[NAME]", m.Name, -1))
 		if err != nil {
 			log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
 		}
