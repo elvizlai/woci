@@ -17,6 +17,7 @@ import (
 	"github.com/wothing/woci/ci"
 	"github.com/wothing/woci/conf"
 	"github.com/wothing/woci/plugin"
+	"github.com/wothing/woci/util/cmd"
 	"github.com/wothing/woci/util/log"
 )
 
@@ -189,27 +190,27 @@ func main() {
 				}
 				conf.RestoreUUID()
 
-				//args := c.Args().First()
-				//if args == "all" {
-				//	for _, v := range conf.Services {
-				//		data, err := base.CMD("docker logs " + conf.Tracer + "-" + v.Name)
-				//		if err != nil {
-				//			log.Terrorf(conf.Tracer, data)
-				//			log.Tfatal(conf.Tracer, err)
-				//		}
-				//		fmt.Fprintf(app.Writer, data)
-				//	}
-				//} else {
-				//	appList := strings.Split(args, ",")
-				//	for _, v := range appList {
-				//		data, err := base.CMD("docker logs " + conf.Tracer + "-" + v)
-				//		if err != nil {
-				//			log.Terrorf(conf.Tracer, data)
-				//			log.Tfatal(conf.Tracer, err)
-				//		}
-				//		fmt.Fprintf(app.Writer, data)
-				//	}
-				//}
+				args := c.Args().First()
+				if args == "all" {
+					for _, v := range conf.Config.Modules {
+						data, err := cmd.TCMD("Looog", "docker logs %s-%s", conf.Config.TRACER, v.Name)
+						if err != nil {
+							log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
+						} else {
+							fmt.Fprintf(app.Writer, data)
+						}
+					}
+				} else {
+					appList := strings.Split(args, ",")
+					for _, v := range appList {
+						data, err := cmd.TCMD("Lo0og", "docker logs %s-%s", conf.Config.TRACER, v)
+						if err != nil {
+							log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
+						} else {
+							fmt.Fprintf(app.Writer, data)
+						}
+					}
+				}
 				return nil
 			},
 		},
