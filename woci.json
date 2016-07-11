@@ -4,13 +4,13 @@
     "REPO": "git@github.com:wothing/17mei.git",
     "WORKDIR": "/gopath/src/github.com/wothing/17mei",
     "BUILD": "CGO_ENABLED=0 GOBIN=/app go install -ldflags '-X github.com/wothing/17mei/db._DEBUG=TRUE'",
-    "BASEIMAGE": "index.tenxcloud.com/sdrzlyz/alpine-ca",
+    "BASEIMAGE": "alpine-ca",
     "PARA": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-[NAME]",
     "START": "docker run -it -d --net=test -v app:/app --name [TRACER]-[NAME] $BASEIMAGE /app/[NAME] $PARA",
     "CLEAN": "docker stop [TRACER]-[NAME] && docker rm [TRACER]-[NAME]"
   },
   "Initial": [
-    "docker run -d --net=test --name [TRACER]-etcd quay.io/coreos/etcd etcd --listen-client-urls 'http://:2379,http://:4001' --advertise-client-urls 'http://:2379,http://:4001'",
+    "docker run -d --net=test --name [TRACER]-etcd quay.io/coreos/etcd --listen-client-urls 'http://:2379,http://:4001' --advertise-client-urls 'http://:2379,http://:4001'",
     "sleep 5s",
     "docker exec [TRACER]-etcd etcdctl set /17mei/pgsql/host [TRACER]-pgsql",
     "docker exec [TRACER]-etcd etcdctl set /17mei/pgsql/port 5432",
@@ -23,8 +23,8 @@
     "docker run -d --net=test --name [TRACER]-nsqd nsqio/nsq /nsqd",
     "docker run -d --net=test --name [TRACER]-redis redis",
     "docker run -d --net=test --name [TRACER]-pgsql -e POSTGRES_DB=meidb -e POSTGRES_PASSWORD=wothing postgres",
-    "/woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable CMD \"CREATE EXTENSION IF NOT EXISTS \"pgcrypto\";\"",
-    "/woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable FILE $WORKDIR/sql"
+    "woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable CMD \"CREATE EXTENSION IF NOT EXISTS \"pgcrypto\";\"",
+    "woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable FILE $WORKDIR/sql"
   ],
   "Before": [
     "make -C $WORKDIR idl ve"
@@ -93,12 +93,6 @@
     {
       "Name": "wechat",
       "Build": "cd $WORKDIR/wechat && $BUILD",
-      "Start": "$START",
-      "Clean": "$CLEAN"
-    },
-    {
-      "Name": "authority",
-      "Build": "cd $WORKDIR/authority && $BUILD",
       "Start": "$START",
       "Clean": "$CLEAN"
     },
@@ -183,6 +177,12 @@
     {
       "Name": "leaflet",
       "Build": "cd $WORKDIR/leaflet && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
+    },
+    {
+      "Name": "proposal",
+      "Build": "cd $WORKDIR/proposal && $BUILD",
       "Start": "$START",
       "Clean": "$CLEAN"
     },
