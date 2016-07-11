@@ -13,48 +13,45 @@ import (
 	"strings"
 
 	"github.com/urfave/cli"
-	"github.com/wothing/log"
 
 	"github.com/wothing/woci/ci"
 	"github.com/wothing/woci/conf"
 	"github.com/wothing/woci/plugin"
+	"github.com/wothing/woci/util/log"
 )
 
-var debug = false
 var configFile = "/woci.json"
-
-func init() {
-	log.SetOutput(os.Stdout)
-	log.SetFlags(log.LstdFlags | log.Llevel)
-}
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "woci"
 	app.HelpName = app.Name
 	app.Usage = "make coding joyful!"
-	app.Version = "0.2"
+	app.Version = "0.3"
 	app.Author = "elvizlai"
 	app.EnableBashCompletion = true
 
 	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:        "debug, d",
-			Usage:       "debug mode",
-			Destination: &debug,
-		},
 		cli.StringFlag{
 			Name:        "config, c",
 			Value:       "/woci.json",
 			Usage:       "load config from `file`",
 			Destination: &configFile,
 		},
+		cli.BoolFlag{
+			Name:        "debug, d",
+			Usage:       "debug mode",
+			Destination: &log.DebugMode,
+		},
+		cli.BoolFlag{
+			Name:        "force, f",
+			Usage:       "force mode",
+			Destination: &log.ForceMode,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
-		if debug {
-			log.SetOutputLevel(log.Ldebug)
-		}
+		log.Initial()
 		if c.NArg() > 0 {
 			conf.ParseConfig(configFile)
 		}

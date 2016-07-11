@@ -10,19 +10,18 @@ package ci
 import (
 	"strings"
 
-	"github.com/wothing/log"
-	. "github.com/wothing/woci/base"
 	"github.com/wothing/woci/conf"
+	"github.com/wothing/woci/util/cmd"
+	"github.com/wothing/woci/util/log"
 )
 
 func Start() {
 	log.Tinfof(conf.Config.TRACER, "START STAGE, COUNT:%d", len(conf.Config.Modules))
 
 	for _, m := range conf.Config.Modules {
-		data, err := TCMD("START", strings.Replace(m.Start, "[NAME]", m.Name, -1))
+		data, err := cmd.TCMD("START", strings.Replace(m.Start, "[NAME]", m.Name, -1))
 		if err != nil {
-			log.Terrorf(conf.Config.TRACER, data)
-			log.Tfatal(conf.Config.TRACER, err)
+			log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
 		}
 	}
 }

@@ -16,7 +16,8 @@ import (
 	"strings"
 
 	"github.com/pborman/uuid"
-	"github.com/wothing/log"
+
+	"github.com/wothing/woci/util/log"
 )
 
 type config struct {
@@ -42,13 +43,13 @@ var Config = &config{Concurrent: runtime.NumCPU(), TRACER: uuid.New()[:8]}
 func ParseConfig(configFile string) {
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Fatal("read '%s' error: %v", configFile, err)
+		log.Tfatalf(Config.TRACER, "read '%s' error: %v", configFile, err)
 	}
-	log.Debugf("load '%s' succeed", configFile)
+	log.Debugf(Config.TRACER, "load '%s' succeed", configFile)
 
 	err = json.Unmarshal(data, Config)
 	if err != nil {
-		log.Fatalf("unmarshal '%s' error: %v", configFile, err)
+		log.Tfatalf(Config.TRACER, "unmarshal '%s' error: %v", configFile, err)
 	}
 
 	dataStr := string(data)
@@ -65,14 +66,14 @@ func GenUUID() {
 	Config.TRACER = uuid.New()[:8]
 	err := ioutil.WriteFile("/.TRACER", []byte(Config.TRACER), os.ModeTemporary)
 	if err != nil {
-		log.Fatal(err)
+		log.Tfatalf(Config.TRACER, err.Error())
 	}
 }
 
 func RestoreUUID() {
 	data, err := ioutil.ReadFile("/.TRACER")
 	if err != nil {
-		log.Fatal("can not do this, read file '/.TRACER' failed")
+		log.Tfatalf(Config.TRACER, "can not do this, read file '/.TRACER' failed")
 	}
 	Config.TRACER = string(data)
 }

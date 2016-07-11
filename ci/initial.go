@@ -8,17 +8,17 @@
 package ci
 
 import (
-	"github.com/wothing/log"
-	. "github.com/wothing/woci/base"
 	"github.com/wothing/woci/conf"
+	"github.com/wothing/woci/util/cmd"
+	"github.com/wothing/woci/util/log"
 )
 
 func Initial() {
 	for _, v := range conf.Config.Initial {
-		data, err := TCMD("INITIAL", v)
+		data, err := cmd.TCMD("INITL", v)
 		if err != nil {
-			log.Fatal(data, "\n", err)
+			log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
 		}
-		log.Debug(data)
+		log.Debugf(conf.Config.TRACER, data)
 	}
 }

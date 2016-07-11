@@ -11,17 +11,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/wothing/log"
-	. "github.com/wothing/woci/base"
 	"github.com/wothing/woci/conf"
+	"github.com/wothing/woci/util/cmd"
+	"github.com/wothing/woci/util/log"
 )
 
 func beforeBuild() {
 	for _, v := range conf.Config.Before {
-		data, err := TCMD("BEFORE", v)
+		data, err := cmd.TCMD("BEFRE", v)
 		if err != nil {
-			log.Terrorf(conf.Config.TRACER, data)
-			log.Tfatal(conf.Config.TRACER, err)
+			log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
 		}
 	}
 }
@@ -29,7 +28,7 @@ func beforeBuild() {
 func Build() {
 	beforeBuild()
 
-	log.Tinfof(conf.Config.TRACER, "BUILD STAGE, COUNT:%d", len(conf.Config.Modules))
+	log.Tinfof(conf.Config.TRACER, "[BUILD] COUNT: %d, Concurrent: %d", len(conf.Config.Modules), conf.Config.Concurrent)
 
 	jobCount := len(conf.Config.Modules)
 	jobs := make(chan string, jobCount)
@@ -51,10 +50,9 @@ func Build() {
 
 func builder(wg *sync.WaitGroup, jobs <-chan string) {
 	for j := range jobs {
-		data, err := TCMD("BUILD", j)
+		data, err := cmd.TCMD("BUILD", j)
 		if err != nil {
-			log.Terrorf(conf.Config.TRACER, data)
-			log.Tfatal(conf.Config.TRACER, err)
+			log.TErrorORFatal(conf.Config.TRACER, "%v,%v", data, err)
 		}
 		wg.Done()
 	}

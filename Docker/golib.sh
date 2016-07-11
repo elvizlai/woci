@@ -3,6 +3,7 @@ echo '-----------go get start-----------'
 go get github.com/golang/protobuf/protoc-gen-go
 
 go get -d github.com/lib/pq
+go get -d github.com/jackc/pgx
 go get -d github.com/garyburd/redigo/redis
 go get -d github.com/coreos/etcd/client
 go get -d github.com/nsqio/go-nsq
@@ -11,13 +12,14 @@ go get -d golang.org/x/crypto/bcrypt
 go get -d google.golang.org/grpc
 
 go get -d github.com/urfave/negroni
-go get -d github.com/gorilla/mux
+go get -d github.com/julienschmidt/httprouter
 go get -d github.com/gorilla/context
 go get -d github.com/dgrijalva/jwt-go
 go get -d github.com/pborman/uuid
 
 go get -d github.com/wothing/log
 go get -d github.com/wothing/worc
+go get -d github.com/wothing/worpc
 go get -d github.com/wothing/wonaming/etcd
 
 go get -d github.com/elgs/gostrgen

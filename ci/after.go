@@ -8,16 +8,16 @@
 package ci
 
 import (
-	"github.com/wothing/log"
-	. "github.com/wothing/woci/base"
 	"github.com/wothing/woci/conf"
+	"github.com/wothing/woci/util/cmd"
+	"github.com/wothing/woci/util/log"
 )
 
 func After() {
 	for _, f := range conf.Config.After {
-		data, err := TCMD("AFTER", f)
+		data, err := cmd.TCMD("AFTER", f)
 		if err != nil {
-			log.Twarn(conf.Config.TRACER, data)
+			log.TErrorORFatal(conf.Config.TRACER, data)
 		}
 	}
 }

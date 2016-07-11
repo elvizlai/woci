@@ -16,7 +16,8 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/wothing/woci/filewalk"
+
+	"github.com/wothing/woci/util/filewalk"
 )
 
 func Postgres(dsn string, para ...string) {

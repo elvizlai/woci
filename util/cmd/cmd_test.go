@@ -5,13 +5,13 @@
  * Created by Elvizlai on 2016/06/26 07:10
  */
 
-package base
+package cmd
 
 import (
 	"fmt"
 	"testing"
 )
 
-func TestCMD(t *testing.T) {
-	fmt.Println(CMD("tree -L 3"))
+func TestTCMD(t *testing.T) {
+	fmt.Println(TCMD("STAGE", "tree -L 3"))
 }
