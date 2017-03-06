@@ -1,0 +1,118 @@
+# [TRACER]
+# [KEY]
+# [PLACEHOLDER]
+
+ENV:
+    REPO: git@github.com:wothing/17mei.git
+    WORKDIR: /gopath/src/github.com/wothing/17mei
+    BUILD: CGO_ENABLED=0 GOBIN=/app go install
+    BASEIMAGE: alpine-ca
+    PARA: -etcd http://ci-etcd.test:2379 -h ci-[KEY]
+    START: $CLEAN && docker run -it -d --net=test -v app:/app --name ci-[KEY] $BASEIMAGE /app/[KEY] $PARA
+    CLEAN: docker stop ci-[KEY] | true && docker rm ci-[KEY] | true
+
+INIT:
+    - docker run -d --net=test --name ci-etcd quay.io/coreos/etcd etcd --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'
+    - sleep 5s
+    - docker exec ci-etcd etcdctl set /17mei/pgsql/host ci-pgsql
+    - docker exec ci-etcd etcdctl set /17mei/pgsql/port 5432
+    - docker exec ci-etcd etcdctl set /17mei/pgsql/name meidb
+    - docker exec ci-etcd etcdctl set /17mei/pgsql/user postgres
+    - docker exec ci-etcd etcdctl set /17mei/pgsql/password wothing
+    - docker exec ci-etcd etcdctl set /17mei/redis/host ci-redis
+    - docker exec ci-etcd etcdctl set /17mei/redis/port 6379
+    - docker exec ci-etcd etcdctl set /17mei/redis/password ''
+    - docker exec ci-etcd etcdctl set /17mei/nsql/host ci-nsql
+    - docker exec ci-etcd etcdctl set /17mei/nsqd/host ci-nsqd
+    - docker run -d --net=test --name ci-nsql nsqio/nsq /nsqlookupd
+    - docker run -d --net=test --name ci-nsqd nsqio/nsq /nsqd -lookupd-tcp-address=ci-nsql:4160
+    - docker run -d --net=test --name ci-redis redis
+    - docker run -d --net=test --name ci-pgsql -e POSTGRES_DB=meidb -e POSTGRES_PASSWORD=wothing postgres
+    - woci plugin postgres postgres://postgres:wothing@ci-pgsql.test:5432/meidb?sslmode=disable CMD "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\"";
+    - woci plugin postgres postgres://postgres:wothing@ci-pgsql.test:5432/meidb?sslmode=disable FILE $WORKDIR/sql
+
+BEFORE:
+    - make -C $WORKDIR idl ve
+
+BUILD:
+  - user: cd $WORKDIR/[KEY] && $BUILD
+  - mediastore: cd $WORKDIR/[KEY] && $BUILD
+  - story: cd $WORKDIR/[KEY] && $BUILD
+  - verification: cd $WORKDIR/[KEY] && $BUILD
+  - push: cd $WORKDIR/[KEY] && $BUILD
+  - other: cd $WORKDIR/[KEY] && $BUILD
+  - activity: cd $WORKDIR/[KEY] && $BUILD
+  - version: cd $WORKDIR/[KEY] && $BUILD
+  - statistic: cd $WORKDIR/[KEY] && $BUILD
+  - share: cd $WORKDIR/[KEY] && $BUILD
+  - wechat: cd $WORKDIR/[KEY] && $BUILD
+  - config: cd $WORKDIR/[KEY] && $BUILD
+  - message: cd $WORKDIR/[KEY] && $BUILD
+  - sms: cd $WORKDIR/[KEY] && $BUILD
+  - hospital: cd $WORKDIR/[KEY] && $BUILD
+  - order: cd $WORKDIR/[KEY] && $BUILD
+  - confidant: cd $WORKDIR/[KEY] && $BUILD
+  - goods: cd $WORKDIR/[KEY] && $BUILD
+  - account: cd $WORKDIR/[KEY] && $BUILD
+  - banner: cd $WORKDIR/[KEY] && $BUILD
+  - easemob: cd $WORKDIR/[KEY] && $BUILD
+  - payment: cd $WORKDIR/[KEY] && $BUILD
+  - coupon: cd $WORKDIR/[KEY] && $BUILD
+  - credit: cd $WORKDIR/[KEY] && $BUILD
+  - leaflet: cd $WORKDIR/[KEY] && $BUILD
+  - proposal: cd $WORKDIR/[KEY] && $BUILD
+  - profile: cd $WORKDIR/[KEY] && $BUILD
+  - search: cd $WORKDIR/[KEY] && $BUILD
+  - jigsaw: cd $WORKDIR/[KEY] && $BUILD
+  - knowlebase: cd $WORKDIR/[KEY] && $BUILD
+  - poster: cd $WORKDIR/[KEY] && $BUILD
+  - appway: cd $WORKDIR/gateway/[KEY] && $BUILD
+  - interway: cd $WORKDIR/gateway/[KEY] && $BUILD
+  - hospway: cd $WORKDIR/gateway/[KEY] && $BUILD
+
+START:
+    - user: $START
+    - mediastore: $START
+    - story: $START
+    - verification: $START
+    - push: $START
+    - other: $START
+    - activity: $START
+    - version: $START
+    - statistic: $START
+    - share: $START
+    - wechat: $START
+    - config: $START
+    - message: $START
+    - sms: $START
+    - hospital: $START
+    - order: $START
+    - confidant: $START
+    - goods: $START
+    - account: $START
+    - banner: $START
+    - easemob: $START
+    - payment: $START
+    - coupon: $START
+    - credit: $START
+    - leaflet: $START
+    - proposal: $START
+    - profile: $START
+    - search: $START
+    - jigsaw: $START
+    - knowlebase: $START
+    - poster: $START
+    - appway: $START
+    - interway: $START
+    - hospway: $START
+
+TEST:
+  - CGO_ENABLED=0 TestEnv=CI CiTracer=ci go test -v $WORKDIR/gateway/tests/[PLACEHOLDER]*.go
+
+SUCCEED:
+
+FAILED:
+
+CLEAN:
+  - docker ps -a | grep ci | awk '{print $1}' | xargs docker stop
+  - docker ps -a | grep ci | awk '{print $1}' | xargs docker rm
