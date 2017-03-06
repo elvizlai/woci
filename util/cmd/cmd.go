@@ -5,38 +5,36 @@
  * Created by Elvizlai on 2016/05/06 09:48
  */
 
-package base
+package cmd
 
 import (
 	"bytes"
 	"fmt"
 	"os/exec"
-
-	"github.com/wothing/log"
+	"strings"
 
 	"github.com/wothing/woci/conf"
+	"github.com/wothing/woci/util/log"
 )
 
-var FMT = fmt.Sprintf
+func TCMD(stage, order string, args ...interface{}) (string, error) {
+	order = strings.Replace(fmt.Sprintf(order, args...), "[TRACER]", conf.Config.TRACER, -1)
+	log.Tinfof(conf.Config.TRACER, "[%-5s] %s", stage, order)
 
-func CMD(order string) (string, error) {
-	log.Tdebugf(conf.Tracer, "CMD --> %s", order)
-
-	cmd := exec.Command("bash")
+	c := exec.Command("bash")
 
 	var stdout bytes.Buffer
-	cmd.Stdout = &stdout
+	c.Stdout = &stdout
 
 	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+	c.Stderr = &stderr
 
 	in := bytes.NewBuffer(nil)
-	cmd.Stdin = in
+	c.Stdin = in
 	in.WriteString(order)
 
-	err := cmd.Run()
+	err := c.Run()
 	if err != nil {
-		log.Tdebugf(conf.Tracer, "%s --> %s\n, STDERR --> %s\n, STDOUT -- > %s\n", order, err.Error(), stderr.String(), stdout.String())
 		if stderr.String() == "" {
 			return stdout.String(), err
 		}

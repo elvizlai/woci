@@ -10,8 +10,10 @@ package filewalk
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 type fl struct {
@@ -31,6 +33,10 @@ func (f *fl) FileList() []string {
 func (f *fl) fileWalk(dirPath, suffix string) {
 	fis, err := ioutil.ReadDir(dirPath)
 	if err != nil {
+		if err.Error() == os.NewSyscallError("readdirent", syscall.ENOTDIR).Error() {
+			f.list = append(f.list, dirPath)
+			return
+		}
 		log.Fatalln(err)
 	}
 

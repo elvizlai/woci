@@ -1,147 +1,215 @@
 {
   "Concurrent": 2,
-  "REPO": "git@github.com:wothing/17mei.git",
-  "ProjectPath": "/gopath/src/github.com/wothing/17mei",
-  "SQLDir": "sql",
-  "EtcdImage": "quay.io/coreos/etcd",
-  "NsqImage": "nsqio/nsq",
-  "PGImage": "postgres",
-  "RedisImage": "redis",
-  "Services": [
+  "Env": {
+    "REPO": "git@github.com:wothing/17mei.git",
+    "WORKDIR": "/gopath/src/github.com/wothing/17mei",
+    "BUILD": "CGO_ENABLED=0 GOBIN=/app go install -ldflags '-X github.com/wothing/17mei/db._DEBUG=TRUE'",
+    "BASEIMAGE": "alpine-ca",
+    "PARA": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-[NAME]",
+    "START": "docker run -it -d --net=test -v app:/app --name [TRACER]-[NAME] $BASEIMAGE /app/[NAME] $PARA",
+    "CLEAN": "docker stop [TRACER]-[NAME] && docker rm [TRACER]-[NAME]"
+  },
+  "Initial": [
+    "docker run -d --net=test --name [TRACER]-etcd quay.io/coreos/etcd --listen-client-urls 'http://:2379,http://:4001' --advertise-client-urls 'http://:2379,http://:4001'",
+    "sleep 5s",
+    "docker exec [TRACER]-etcd etcdctl set /17mei/pgsql/host [TRACER]-pgsql",
+    "docker exec [TRACER]-etcd etcdctl set /17mei/pgsql/port 5432",
+    "docker exec [TRACER]-etcd etcdctl set /17mei/pgsql/name meidb",
+    "docker exec [TRACER]-etcd etcdctl set /17mei/pgsql/user postgres",
+    "docker exec [TRACER]-etcd etcdctl set /17mei/pgsql/password wothing",
+    "docker exec [TRACER]-etcd etcdctl set /17mei/redis/host [TRACER]-redis",
+    "docker exec [TRACER]-etcd etcdctl set /17mei/redis/port 6379",
+    "docker exec [TRACER]-etcd etcdctl set /17mei/redis/password ''",
+    "docker run -d --net=test --name [TRACER]-nsqd nsqio/nsq /nsqd",
+    "docker run -d --net=test --name [TRACER]-redis redis",
+    "docker run -d --net=test --name [TRACER]-pgsql -e POSTGRES_DB=meidb -e POSTGRES_PASSWORD=wothing postgres",
+    "woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable CMD \"CREATE EXTENSION IF NOT EXISTS \"pgcrypto\";\"",
+    "woci plugin postgres postgres://postgres:wothing@[TRACER]-pgsql.test:5432/meidb?sslmode=disable FILE $WORKDIR/sql"
+  ],
+  "Before": [
+    "make -C $WORKDIR idl ve"
+  ],
+  "Modules": [
     {
       "Name": "user",
-      "Path": "user",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-user"
+      "Build": "cd $WORKDIR/user && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "mediastore",
-      "Path": "mediastore",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-mediastore"
+      "Build": "cd $WORKDIR/mediastore && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "story",
-      "Path": "story",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-story"
+      "Build": "cd $WORKDIR/story && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "verification",
-      "Path": "verification",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-verification"
+      "Build": "cd $WORKDIR/verification && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "push",
-      "Path": "push",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-push"
+      "Build": "cd $WORKDIR/push && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "other",
-      "Path": "other",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-other"
+      "Build": "cd $WORKDIR/other && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "activity",
-      "Path": "activity",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-activity"
+      "Build": "cd $WORKDIR/activity && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "version",
-      "Path": "version",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-version"
+      "Build": "cd $WORKDIR/version && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "statistic",
-      "Path": "statistic",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-statistic"
+      "Build": "cd $WORKDIR/statistic && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "share",
-      "Path": "share",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-share"
+      "Build": "cd $WORKDIR/share && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "wechat",
-      "Path": "wechat",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-wechat"
-    },
-    {
-      "Name": "authority",
-      "Path": "authority",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-authority"
+      "Build": "cd $WORKDIR/wechat && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "config",
-      "Path": "config",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-config"
+      "Build": "cd $WORKDIR/config && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "message",
-      "Path": "message",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-message"
+      "Build": "cd $WORKDIR/message && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "sms",
-      "Path": "sms",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-sms"
+      "Build": "cd $WORKDIR/sms && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "hospital",
-      "Path": "hospital",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-hospital"
+      "Build": "cd $WORKDIR/hospital && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "order",
-      "Path": "order",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-order"
+      "Build": "cd $WORKDIR/order && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "confidant",
-      "Path": "confidant",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-confidant"
+      "Build": "cd $WORKDIR/confidant && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "goods",
-      "Path": "goods",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-goods"
+      "Build": "cd $WORKDIR/goods && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "account",
-      "Path": "account",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-account"
+      "Build": "cd $WORKDIR/account && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "banner",
-      "Path": "banner",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-banner"
+      "Build": "cd $WORKDIR/banner && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "easemob",
-      "Path": "easemob",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-easemob"
+      "Build": "cd $WORKDIR/easemob && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "payment",
-      "Path": "payment",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-payment"
+      "Build": "cd $WORKDIR/payment && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "coupon",
-      "Path": "coupon",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379 -h [TRACER]-coupon"
+      "Build": "cd $WORKDIR/coupon && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
+    },
+    {
+      "Name": "credit",
+      "Build": "cd $WORKDIR/credit && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
+    },
+    {
+      "Name": "leaflet",
+      "Build": "cd $WORKDIR/leaflet && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
+    },
+    {
+      "Name": "proposal",
+      "Build": "cd $WORKDIR/proposal && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "appway",
-      "Path": "gateway/appway",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379"
+      "Build": "cd $WORKDIR/gateway/appway && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "interway",
-      "Path": "gateway/interway",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379"
+      "Build": "cd $WORKDIR/gateway/interway && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     },
     {
       "Name": "hospway",
-      "Path": "gateway/hospway",
-      "Para": "-etcd http://[TRACER]-etcd.test:2379"
+      "Build": "cd $WORKDIR/gateway/hospway && $BUILD",
+      "Start": "$START",
+      "Clean": "$CLEAN"
     }
+  ],
+  "Test": [
+    "CGO_ENABLED=0 TestEnv=CI CiTracer=[TRACER] go test -v $WORKDIR/gateway/tests/[PLACEHOLDER]*.go"
+  ],
+  "After": [
+    "docker ps -a | grep [TRACER] | awk '{print $1}' | xargs docker stop",
+    "docker ps -a | grep [TRACER] | awk '{print $1}' | xargs docker rm"
   ]
 }
